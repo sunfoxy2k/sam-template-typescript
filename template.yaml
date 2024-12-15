@@ -76,6 +76,15 @@ Resources:
             Method: get
             RestApiId:
               Ref: ApiGatewayApi
+      #   ScheduleTrigger:
+      #     Type: Schedule
+      #     Properties:
+      #       Schedule: 'rate(2 hours)'
+      # Policies:
+      #   - DynamoDBCrudPolicy:
+      #       TableName: !Ref AppTable
+      #   - S3CrudPolicy:
+      #       BucketName: !Ref S3Bucket
     Metadata: 
       BuildMethod: esbuild
       BuildProperties:
