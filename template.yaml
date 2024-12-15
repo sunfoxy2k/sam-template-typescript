@@ -1,0 +1,107 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  sam-app
+
+  Sample SAM Template for sam-app
+  
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    Runtime: nodejs20.x
+    Handler: index.lambdaHandler
+    MemorySize: 128
+    Timeout: 3
+    Environment:
+      Variables:
+        TABLE_NAME: !Ref AppTable
+        # BUCKET : !Ref TalyS3Bucket
+
+
+Resources:
+  # S3Bucket: 
+  #   Type: AWS::S3::Bucket
+  #   Properties:
+  #     AccessControl: PublicRead
+
+  AppTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: "PK"
+          AttributeType: "S"
+        - AttributeName: "SK"
+          AttributeType: "S"
+      KeySchema:
+      - AttributeName: "PK"
+        KeyType: "HASH"
+      - AttributeName: "SK"
+        KeyType: "RANGE"
+      BillingMode: PAY_PER_REQUEST
+
+  ApiGatewayApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: DEV
+      Cors:
+        AllowMethods: "'*'"
+        AllowHeaders: "'*'"
+        AllowOrigin: "'*'"
+  
+  HelloWorldFunction:
+    Type: AWS::Serverless::Function 
+    Properties:
+      CodeUri: app/route/hello/GET/src
+      Runtime: nodejs20.x
+      Architectures:
+        - x86_64
+      Events:
+        HelloWorld:
+          Type: Api 
+          Properties:
+            Path: /hello
+            Method: get
+            RestApiId:
+              Ref: ApiGatewayApi
+    Metadata: 
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        EntryPoints: 
+        - index.ts
+
+  preflightFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri : app/route/preflight
+      Events:
+        OptionApi:
+          Type: Api
+          Properties:
+            Path: /{proxy+}
+            Method: OPTIONS
+            RestApiId:
+              Ref: ApiGatewayApi
+    Metadata: 
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        EntryPoints: 
+        - index.ts
+
+Outputs:
+  WebEndpoint:
+    Description: "API Gateway endpoint URL for DEV stage"
+    Value: !Sub "https://${ApiGatewayApi}.execute-api.${AWS::Region}.amazonaws.com/DEV"
+
+  Database:
+    Description: "DynamoDB endpoint"
+    Value: !Ref AppTable
+
+  # S3Bucket:
+  #   Description: "S3 Bucket"
+  #   Value: !Ref S3Bucket
+
+  
