@@ -57,9 +57,9 @@ Resources:
     Properties:
       StageName: DEV
       Cors:
-        AllowMethods: "'*'"
-        AllowHeaders: "'*'"
-        AllowOrigin: "'*'"
+        AllowMethods: "*"
+        AllowHeaders: "*"
+        AllowOrigin: "*"
   
   HelloWorldFunction:
     Type: AWS::Serverless::Function 
